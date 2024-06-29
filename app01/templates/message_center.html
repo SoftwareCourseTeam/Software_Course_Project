@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>消息中心</title>
+    <link rel="stylesheet" href="../static/plugins/bootstrap-3.4.1/css/bootstrap.css">
+    <link rel="stylesheet" href="../static/plugins/font-awesome-4.7.0/css/font-awesome.min.css">
+    <style>
+        .navbar {
+            margin-bottom: 0;
+            border: none;
+            border-radius: 0;
+        }
+        .message-table {
+            margin: 20px;
+        }
+        .message-table th, .message-table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var isAdmin = {{ admin|lower }};  // Django模板标签将is_admin的值传递给JavaScript
+            if (isAdmin) {
+                document.getElementById('admin-content').style.display = 'block';
+            } else {
+                document.getElementById('admin-content').style.display = 'none';
+            }
+        });
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-9" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/device_list/">科研设备管理</a>
+            </div>
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-9">
+                <ul class="nav navbar-nav">
+                    <li><a href="/device_list/">设备列表</a></li>
+                    <li><a href="/device/search/">设备查询</a></li>
+                    <li><a href="/device/scrap/">设备报废管理</a></li>
+                    <li><a href="/device/borrow/">设备借出管理</a></li>
+                    <li class="active"><a href="/message_center/">消息中心</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="/logout/">退出</a></li>
+                    <li class="dropdown">
+                        <a href="/user/info/" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-user"></i> <!-- 使用 Font Awesome 中的用户小人图标 -->
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/user/info/">个人信息</a></li>
+                            <li><a href="/user/edit/">修改资料</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div  class="container">
+        <div class="row message-table">
+            <div id="admin-content" class="col-md-12">
+                <h3>借用申请</h3>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>设备名称</th>
+                            <th>借出数量</th>
+                            <th>申请日期</th>
+                            <th>申请人</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="borrow-requests-list">
+                        <!-- 借用申请将通过 JavaScript 动态添加到这里 -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-12">
+                <h3>处理结果</h3>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>设备名称</th>
+                            <th>借出数量</th>
+                            <th>申请日期</th>
+                            <th>处理结果</th>
+                        </tr>
+                    </thead>
+                    <tbody id="processed-requests-list">
+                        <!-- 处理结果将通过 JavaScript 动态添加到这里 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="../static/js/jquery-3.7.1.min.js"></script>
+    <script src="../static/plugins/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+    
+    <script type="text/javascript">
+        $(document).ready(function() {
+            loadBorrowRequests();
+            loadProcessedRequests();
+        });
+
+        function loadBorrowRequests() {
+            $.ajax({
+                url: '/message_center/borrow_requests/',
+                type: 'GET',
+                success: function(response) {
+                    var requests = response.requests;
+                    var requestsList = $('#borrow-requests-list');
+                    requestsList.empty();
+                    requests.forEach(function(request) {
+                        requestsList.append(
+                            '<tr>' +
+                                '<td>' + request.deviceName + '</td>' +
+                                '<td>' + request.borrowNumber + '</td>' +
+                                '<td>' + request.requestDate + '</td>' +
+                                '<td>' + request.requester + '</td>' +
+                                '<td>' +
+                                    '<button class="btn btn-success" onclick="processRequest(' + request.id + ', true)">同意</button> ' +
+                                    '<button class="btn btn-danger" onclick="processRequest(' + request.id + ', false)">拒绝</button>' +
+                                '</td>' +
+                            '</tr>'
+                        );
+                    });
+                },
+                error: function(error) {
+                    alert('无法加载借用申请');
+                }
+            });
+        }
+
+        function loadProcessedRequests() {
+            $.ajax({
+                url: '/message_center/processed_requests/',
+                type: 'GET',
+                success: function(response) {
+                    var requests = response.requests;
+                    var requestsList = $('#processed-requests-list');
+                    requestsList.empty();
+                    requests.forEach(function(request) {
+                        requestsList.append(
+                            '<tr>' +
+                                '<td>' + request.deviceName + '</td>' +
+                                '<td>' + request.borrowNumber + '</td>' +
+                                '<td>' + request.requestDate + '</td>' +
+                                '<td>' + request.approved + '</td>' +
+                            '</tr>'
+                        );
+                    });
+                },
+                error: function(error) {
+                    alert('无法加载处理结果');
+                }
+            });
+        }
+
+        function processRequest(requestId, approve) {
+            $.ajax({
+                url: '/message_center/request/',
+                type: 'POST',
+                data: { id: requestId, approve: approve },
+                success: function(response) {
+                    alert('处理成功');
+                    loadBorrowRequests();
+                    loadProcessedRequests();
+                },
+                error: function(error) {
+                    alert('处理失败');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../static/css/plugins/bootstrap-3.4.1/css/bootstrap.css">
+    <style>
+        .account{
+            width:500px;
+            height:350px;
+
+            border:1px solid #ddd; /*边框*/
+            border-radius: 20px; /*边框圆角*/
+            box-shadow: 0px 5px 20px #aaa; /*边框阴影*/
+
+            margin-left: auto; /*居中*/
+            margin-right: auto; /*居中*/
+            margin-top: 200px;  /*距上方*/
+            padding: 20px 40px; /*内边距*/
+        }
+        .account h1{
+            text-align: center; /*h1居中*/
+        }
+
+        .navbar {
+            margin-bottom: 0; /* 去除下方边距 */
+            border: none;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        .head-bar{
+            height: 100px;
+        }
+        .head-bar .navbar{
+            background-color: #222222;
+            
+        }
+        /*上方页面条*/
+        .head-bar .container-fluid{
+            height: 100px;
+        }
+        
+        /*上方页面条*/
+        .head-bar .container-fluid .navbar-header{
+            float: right;
+            margin-top: 20px;
+        }
+        
+        /*上方页面条*/
+        .head-bar .container-fluid .title-area{
+            display: inline-block;
+            margin-top: 40px;
+        }
+
+    </style>
+</head>
+<body>
+    <!--上方页面条-->
+    <div class="head-bar">
+      <nav class="navbar navbar-default">
+          <div class="container-fluid">
+              <div class="title-area">
+                  <a href="#" style="color: white;; font-size: large; font-style: italic;">科研设备管理</a> <!--这里要修改href为跳转到登录界面-->
+              </div>
+            <div class="navbar-header">
+              <a class="navbar-brand" href="#"> <!--这里要修改href为跳转到个人信息界面-->
+                  <span class="glyphicon glyphicon-user" aria-hidden="true" style="font-size:xx-large;"></span>
+              </a>
+            </div>
+            <div style="clear: both;"></div>
+          </div>
+        </nav>
+        <div style="clear: both;"></div>
+  </div>
+    
+    <div class="account">
+        <h1>用户登录</h1>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="exampleInputEmail1">用户名</label>
+              <input type="email" class="form-control" id="exampleInputEmail1" placeholder="请输入用户名" name="user">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">密码</label>
+              <input type="password" class="form-control" id="exampleInputPassword1" placeholder="请输入密码" name="pwd">
+            </div>
+            <input type="submit" value="登录"><span style="color: red;">{{ error_msg }}</span>
+          </form>
+        <div style="margin-top: 10px;margin-left: 12px;">
+            <a href="/regist/">注册</a><!--这里要修改href为跳转到注册界面-->
+        </div>
+    </div>
+</body>
+</html>

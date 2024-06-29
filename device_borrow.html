@@ -1,0 +1,32 @@
+请补全下面基于django框架的ajax代码的TODO部分，完成功能：若device.status为1显示归还，为3显示删除
+function loadMyBorrowedDevices() {
+            $.ajax({
+                url: '/device/borrow/my/',
+                type: 'GET',
+                success: function(response) {
+                    var borrowedDevices = response.borrowedDevices;
+                    var borrowedDeviceList = $('#borrowed-device-list');
+                    borrowedDeviceList.empty();
+                    borrowedDevices.forEach(function(device) {
+                        var actionButton = '';
+                        if (device.status === 1) {
+                            actionButton = '<button class="return-button" data-id="' + device.id + '">归还</button>';
+                        } else if (device.status === 3) {
+                            actionButton = '<button class="delete-button" data-id="' + device.id + '">删除</button>';
+                        }
+                        borrowedDeviceList.append(
+                            '<tr>' +
+                                '<td>' + device.name + '</td>' +
+                                '<td>' + device.borrowNumber + '</td>' +
+                                '<td>' + device.borrowDate + '</td>' +
+                                '<td>' + device.returnDate + '</td>' +
+                                TODO:
+                            '</tr>'
+                        );
+                    });
+                },
+                error: function(error) {
+                    alert('无法加载我的借用设备');
+                }
+            });
+        }

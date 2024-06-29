@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>设备列表</title>
+    <link rel="stylesheet" href="../static/plugins/bootstrap-3.4.1/css/bootstrap.css">
+    <link rel="stylesheet" href="../static/plugins/font-awesome-4.7.0/css/font-awesome.min.css">
+    <style>
+        .navbar {
+            margin-bottom: 0;
+            border: none;
+            border-radius: 0;
+        }
+        .device-table {
+            margin: 20px;
+        }
+        .device-table th, .device-table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-9" aria-expanded="false">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/device_list/">科研设备管理</a>
+          </div>
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-9">
+            <ul class="nav navbar-nav">
+              <li class="active"><a href="/device_list/">设备列表</a></li>
+              <li><a href="/device/search/">设备查询</a></li>
+              <li><a href="/device/scrap/">设备报废管理</a></li>
+              <li><a href="/device/borrow/">设备借出管理</a></li>
+              <li><a href="/message_center/">消息中心</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/logout/">退出</a></li>
+                <li class="dropdown">
+                    <a href="/user/info/" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-user"></i> <!-- 使用 Font Awesome 中的用户小人图标 -->
+                        <span class="caret"></span>
+                    </a>
+                  <ul class="dropdown-menu">
+                    <li><a href="/user/info/">个人信息</a></li>
+                    <li><a href="/user/edit/">修改资料</a></li>
+                  </ul>
+                </li>
+              </ul>
+          </div>
+        </div>
+      </nav>
+    
+    <div class="container">
+        <div class="row" style="margin: 10px;">
+            <div class="col-md-12" style="margin-left: 10px;">
+                <button class="btn btn-success" data-toggle="modal" data-target="#addDeviceModal">添加设备</button>
+                <button class="btn btn-warning" data-toggle="modal" onclick="prepareEditDeviceModal()" data-target="#editDeviceModal">修改设备</button>
+                <button class="btn btn-danger" data-toggle="modal" data-target="#deleteDeviceModal">删除设备</button>
+            </div>
+        </div>
+        <div class="row device-table">
+            <div class="col-md-12">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>设备名称</th>
+                            <th>设备数量</th>
+                            <th>设备图片</th>
+                            <th>型号规格</th>
+                            <th>购置日期</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="device-list">
+                        <!-- 设备信息将通过 JavaScript 动态添加到这里 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片模态框 -->
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="imageModalLabel">设备图片</h4>
+                </div>
+                <div class="modal-body">
+                    <img id="deviceImage" src="" alt="设备图片" style="width: 100%;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加设备模态框 -->
+    <div class="modal fade" id="addDeviceModal" tabindex="-1" role="dialog" aria-labelledby="addDeviceModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-window-close" style="color: red;"></i></button>
+                    <h4 class="modal-title" id="addDeviceModalLabel">添加设备</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="addDeviceForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="addDeviceName">设备名称</label>
+                            <input type="text" class="form-control" id="addDeviceName" placeholder="请输入设备名称">
+                        </div>
+                        <div class="form-group">
+                            <label for="addDeviceNumber">设备数量</label>
+                            <input type="text" class="form-control" id="addDeviceNumber" placeholder="请输入设备数量">
+                        </div>
+                        <div class="form-group">
+                            <label for="addDeviceImage">设备图片</label>
+                            <input type="file" class="form-control" id="addDeviceImage">
+                        </div>
+                        <div class="form-group">
+                            <label for="addDeviceModelSpec">型号规格</label>
+                            <input type="text" class="form-control" id="addDeviceModelSpec" placeholder="请输入设备型号规格">
+                        </div>
+                        <div class="form-group">
+                            <label for="addDevicePurchaseDate">购置日期</label>
+                            <input type="date" class="form-control" id="addDevicePurchaseDate">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="submitAddDevice()">提交</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改设备模态框 -->
+    <div class="modal fade" id="editDeviceModal" tabindex="-1" role="dialog" aria-labelledby="editDeviceModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-window-close" style="color: red;"></i></button>
+                    <h4 class="modal-title" id="editDeviceModalLabel">修改设备</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="editDeviceForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="editDeviceName">设备名称</label>
+                            <input type="text" class="form-control" id="editDeviceName" placeholder="请输入设备名称">
+                        </div>
+                        <div class="form-group">
+                            <label for="editDeviceNumber">设备数量</label>
+                            <input type="text" class="form-control" id="editDeviceNumber" placeholder="请输入设备编号">
+                        </div>
+                        <div class="form-group">
+                            <label for="editDeviceImage">设备图片</label>
+                            <input type="file" class="form-control" id="editDeviceImage">
+                        </div>
+                        <div class="form-group">
+                            <label for="editDeviceModelSpec">型号规格</label>
+                            <input type="text" class="form-control" id="editDeviceModelSpec" placeholder="请输入设备型号规格">
+                        </div>
+                        <div class="form-group">
+                            <label for="editDevicePurchaseDate">购置日期</label>
+                            <input type="date" class="form-control" id="editDevicePurchaseDate">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="submitEditDevice()">提交</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除设备模态框 -->
+    <div class="modal fade" id="deleteDeviceModal" tabindex="-1" role="dialog" aria-labelledby="deleteDeviceModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-window-close" style="color: red;"></i></button>
+                    <h4 class="modal-title" id="deleteDeviceModalLabel">删除设备</h4>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除选中的设备吗？</p>
+                    <button type="button" class="btn btn-danger" onclick="submitDeleteDevice()">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../static/js/jquery-3.7.1.min.js"></script>
+    <script src="../static/plugins/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+    
+    <script type="text/javascript">
+        $(document).ready(function() {
+            loadDeviceList();
+        });
+
+
+        function loadDeviceList() {
+            $.ajax({
+                url: '/device/load',
+                type: 'GET',
+                data:{'type':'main'},
+                success: function(response) {
+                    var devices = response.devices;
+                    var deviceList = $('#device-list');
+                    deviceList.empty();
+                    devices.forEach(function(device) {
+                        deviceList.append(
+                            '<tr>' +
+                                '<td>' + device.name + '</td>' +
+                                '<td>' + device.number + '</td>' +
+                                '<td><button class="btn btn-info" onclick="viewImage(\'' + device.image + '\')">查看图片</button></td>' +
+                                '<td>' + device.model_spec + '</td>' +
+                                '<td>' + device.purchase_date + '</td>' +
+                                '<td><input type="checkbox" name="selectedDevice" value="' + device.id + '"></td>' +
+                            '</tr>'
+                        );
+                    });
+                },
+                error: function(error) {
+                    alert('无法加载设备列表');
+                }
+            });
+        }
+
+        function viewImage(imageUrl) {
+            $('#deviceImage').attr('src', imageUrl);
+            $('#imageModal').modal('show');
+        }
+
+        function submitAddDevice() {
+            var formData = new FormData();
+            $('#addDeviceForm').find(':input').each(function() {
+                var input = $(this);
+                var name = input.attr('id');
+                var type = input.attr('type');
+                var value = input.val();
+                if (name) {
+                    if (type === 'file') {
+                        // 如果是文件输入，添加文件到FormData对象
+                        var files = input[0].files;
+                        formData.append(name, files[0]);
+                        } else {
+                            // 如果是其他类型的输入，添加输入值到FormData对象
+                            formData.append(name, value);
+                        }
+                    }
+                });
+                formData.append('action', 'add');
+            $.ajax({
+                url: '/device/add/',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    $('#addDeviceModal').modal('hide');
+                    loadDeviceList();
+                },
+                error: function(error) {
+                    alert('添加设备失败');
+                }
+            });
+        }
+
+        function prepareEditDeviceModal() {
+            var selectedDevices = [];
+            $('input[name="selectedDevice"]:checked').each(function() {
+                selectedDevices.push($(this).val());
+            });
+
+            if (selectedDevices.length != 1) {
+                alert('请选择一个指定设备');
+                return;
+            }
+
+            var selectedDeviceId = selectedDevices[0];
+            $.ajax({
+                url: '/device/edit/new/',
+                type: 'GET',
+                data:{'id':selectedDeviceId
+                },
+                success: function(response) {
+                    var device = response.device;
+                    console.log(device)
+                    $('#editDeviceId').val(device.id);
+                    $('#editDeviceName').val(device.name);
+                    $('#editDeviceNumber').val(device.number);
+                    $('#editDeviceModelSpec').val(device.model_spec);
+                    $('#editDevicePurchaseDate').val(device.purchase_date);
+                    $('#editDeviceModal').modal('show');
+                },
+                error: function(error) {
+                    alert('获取设备信息失败');
+                }
+            });
+        }
+
+        
+        function submitEditDevice() {
+            var selectedDevices = [];
+            $('input[name="selectedDevice"]:checked').each(function() {
+                selectedDevices.push($(this).val());
+            });
+
+            if (selectedDevices.length != 1) {
+                alert('请选择一个指定设备');
+                return;
+            }
+
+            var formData = new FormData();
+            $('#editDeviceForm').find(':input').each(function() {
+                var input = $(this);
+                var name = input.attr('id');
+                var type = input.attr('type');
+                var value = input.val();
+                if (name) {
+                    if (type === 'file') {
+                        // 如果是文件输入，添加文件到FormData对象
+                        var files = input[0].files;
+                        if (files.length > 0) {
+                            formData.append(name, files[0]);
+                        }
+                        } else {
+                            // 如果是其他类型的输入，添加输入值到FormData对象
+                            formData.append(name, value);
+                        }
+                }
+            });
+            formData.append('action', 'edit');
+            formData.append('id', selectedDevices);
+
+            $.ajax({
+                url: '/device/edit/',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    $('#editDeviceModal').modal('hide');
+                    loadDeviceList();
+                },
+                error: function(error) {
+                    alert('修改设备失败');
+                }
+            });
+        }
+
+        function submitDeleteDevice() {
+            var selectedDevices = [];
+            $('input[name="selectedDevice"]:checked').each(function() {
+                selectedDevices.push($(this).val());
+            });
+
+            if (selectedDevices.length == 0) {
+                alert('请选择要删除的设备');
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('id', selectedDevices);
+
+            $.ajax({
+                url: '/device/delete/',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    $('#deleteDeviceModal').modal('hide');
+                    loadDeviceList();
+                },
+                error: function(error) {
+                    alert('删除设备失败');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

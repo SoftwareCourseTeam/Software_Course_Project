@@ -1,0 +1,347 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>设备借出管理</title>
+    <link rel="stylesheet" href="{% static 'plugins/bootstrap-3.4.1/css/bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'plugins/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <style>
+        .navbar {
+            margin-bottom: 0;
+            border: none;
+            border-radius: 0;
+        }
+        .device-table {
+            margin: 20px;
+        }
+        .device-table th, .device-table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-9" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/device_list/">科研设备管理</a>
+            </div>
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-9">
+                <ul class="nav navbar-nav">
+                    <li><a href="/device_list/">设备列表</a></li>
+                    <li><a href="/device/search/">设备查询</a></li>
+                    <li><a href="/device/scrap/">设备报废管理</a></li>
+                    <li class="active"><a href="/device/borrow/">设备借出管理</a></li>
+                    <li><a href="/message_center/">消息中心</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="/logout/">退出</a></li>
+                    <li class="dropdown">
+                        <a href="/user/info/" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-user"></i> <!-- 使用 Font Awesome 中的用户小人图标 -->
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/user/info/">个人信息</a></li>
+                            <li><a href="/user/edit/">修改资料</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="row" style="margin: 10px;">
+            <div class="col-md-12" style="margin-left: 10px;">
+                <form class="form-inline" id="searchForm">
+                    <div class="form-group">
+                        <label for="searchType">查询类型</label>
+                        <select class="form-control" id="searchType">
+                            <option value="name">设备名称</option>
+                            <option value="model">设备型号</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="searchQuery">查询内容</label>
+                        <input type="text" class="form-control" id="searchQuery" placeholder="输入名称或型号">
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="searchDevices()">查询</button>
+                    <button type="button" class="btn btn-primary" onclick="openMyBorrowedDevicesModal()" style="float:right;margin-right:20px">借用记录</button>
+                </form>
+            </div>
+        </div>
+        <div class="row device-table">
+            <div class="col-md-12">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>设备名称</th>
+                            <th>设备数量</th>
+                            <th>设备图片</th>
+                            <th>型号规格</th>
+                            <th>购置日期</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="device-list">
+                        <!-- 设备信息将通过 JavaScript 动态添加到这里 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片模态框 -->
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="imageModalLabel">设备图片</h4>
+                </div>
+                <div class="modal-body">
+                    <img id="deviceImage" src="" alt="设备图片" style="width: 100%;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 借出设备模态框 -->
+    <div class="modal fade" id="borrowDeviceModal" tabindex="-1" role="dialog" aria-labelledby="borrowDeviceModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-window-close" style="color: red;"></i></button>
+                    <h4 class="modal-title" id="borrowDeviceModalLabel">借出设备</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="borrowDeviceForm">
+                        <div class="form-group">
+                            <label for="borrowDeviceId">设备ID</label>
+                            <input type="text" class="form-control" id="borrowDeviceId" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="borrowDeviceName">设备名称</label>
+                            <input type="text" class="form-control" id="borrowDeviceName" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="borrowDeviceNumber">借出数量</label>
+                            <input type="number" class="form-control" id="borrowDeviceNumber" min="1">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="submitBorrowDevice()">提交申请</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 我的借用模态框 -->
+    <div class="modal fade" id="myBorrowedDevicesModal" tabindex="-1" role="dialog" aria-labelledby="myBorrowedDevicesModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-window-close" style="color: red;"></i></button>
+                    <h4 class="modal-title" id="myBorrowedDevicesModalLabel">我的借用</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>设备名称</th>
+                                <th>借出数量</th>
+                                <th>借出日期</th>
+                                <th>归还日期</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="borrowed-device-list">
+                            <!-- 借用信息将通过 JavaScript 动态添加到这里 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'plugins/bootstrap-3.4.1/js/bootstrap.min.js' %}"></script>
+    
+    <script type="text/javascript">
+        $(document).ready(function() {
+            loadDeviceList();
+            loadMyBorrowedDevices();
+        });
+
+        function loadDeviceList() {
+            $.ajax({
+                url: '/device/load/',
+                type: 'GET',
+                data:{'type':'borrow'},
+                success: function(response) {
+                    var devices = response.devices;
+                    var deviceList = $('#device-list');
+                    deviceList.empty();
+                    devices.forEach(function(device) {
+                        deviceList.append(
+                            '<tr>' +
+                                '<td>' + device.name + '</td>' +
+                                '<td>' + device.number + '</td>' +
+                                '<td><button class="btn btn-info" onclick="viewImage(\'' + device.image + '\')">查看图片</button></td>' +
+                                '<td>' + device.model_spec + '</td>' +
+                                '<td>' + device.purchase_date + '</td>' +
+                                '<td><button class="btn btn-success" onclick="prepareBorrowDeviceModal(\'' + device.id + '\', \'' + device.name + '\', ' + device.num + ')">借出</button></td>' +
+                            '</tr>'
+                        );
+                    });
+                },
+                error: function(error) {
+                    alert('无法加载设备列表');
+                }
+            });
+        }
+
+        function viewImage(imageUrl) {
+            $('#deviceImage').attr('src', imageUrl);
+            $('#imageModal').modal('show');
+        }
+
+        function openMyBorrowedDevicesModal() {
+            $('#myBorrowedDevicesModal').modal('show');
+        }
+
+        function searchDevices() {
+            var type = $('#searchType').val();
+            var query = $('#searchQuery').val();
+
+            $.ajax({
+                url: '/device/search/main/',
+                type: 'GET',
+                data: {
+                        'query_type': type,
+                        'query_input': query
+                    },
+                success: function(response) {
+                    var devices = response.devices;
+                    var deviceList = $('#device-list');
+                    deviceList.empty();
+                    devices.forEach(function(device) {
+                        deviceList.append(
+                            '<tr>' +
+                                '<td>' + device.name + '</td>' +
+                                '<td>' + device.num + '</td>' +
+                                '<td><button class="btn btn-info" onclick="viewImage(\'' + device.image + '\')">查看图片</button></td>' +
+                                '<td>' + device.model + '</td>' +
+                                '<td>' + device.purchase_date + '</td>' +
+                                '<td><button class="btn btn-success" onclick="prepareBorrowDeviceModal(\'' + device.id + '\', \'' + device.name + '\', ' + device.num + ')">借出</button></td>' +
+                            '</tr>'
+                        );
+                    });
+                },
+                error: function(error) {
+                    alert('查询设备失败');
+                }
+            });
+        }
+
+        function prepareBorrowDeviceModal(deviceId, deviceName, maxNumber) {
+            $('#borrowDeviceId').val(deviceId);
+            $('#borrowDeviceName').val(deviceName);
+            $('#borrowDeviceNumber').attr('max', maxNumber);
+            $('#borrowDeviceModal').modal('show');
+        }
+
+        function submitBorrowDevice() {
+            var formData = {
+                deviceId: $('#borrowDeviceId').val(),
+                borrowNumber: $('#borrowDeviceNumber').val()
+            };
+
+            $.ajax({
+                url: '/device/borrow/submit/',
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    $('#borrowDeviceModal').modal('hide');
+                    alert('借出申请已提交');
+                    loadDeviceList();  // 重新加载设备列表，更新设备数量
+                    loadMyBorrowedDevices();
+                },
+                error: function(error) {
+                    alert('提交借出申请失败');
+                }
+            });
+        }
+
+        function returnBorrowDeviceModal(deviceId) {
+            $.ajax({
+                url: '/device/borrow/return/',
+                type: 'POST',
+                data: {'deviceId':deviceId},
+                success: function(response) {
+                    alert('已成功归还');
+                    loadDeviceList();  // 重新加载设备列表，更新设备数量
+                    loadMyBorrowedDevices()
+                },
+                error: function(error) {
+                    alert('提交归还申请失败');
+                }
+            });
+        }
+        function deleteBorrowDeviceModal(deviceId) {
+            $.ajax({
+                url: '/device/borrow/delete/',
+                type: 'POST',
+                data: {'deviceId':deviceId},
+                success: function(response) {
+                    alert('已成功删除');
+                    loadDeviceList();  // 重新加载设备列表，更新设备数量
+                    loadMyBorrowedDevices()
+                },
+                error: function(error) {
+                    alert('提交删除申请失败');
+                }
+            });
+        }
+
+        function loadMyBorrowedDevices() {
+            $.ajax({
+                url: '/device/borrow/my/',
+                type: 'GET',
+                success: function(response) {
+                    var borrowedDevices = response.borrowedDevices;
+                    var borrowedDeviceList = $('#borrowed-device-list');
+                    borrowedDeviceList.empty();
+                    borrowedDevices.forEach(function(device) {
+                        var actionButton = '';
+                        if (device.status === 1) {
+                            actionButton = '<button class="btn btn-success" onclick="returnBorrowDeviceModal(' + device.id + ')">归还</button>';
+                        } else {
+                            actionButton = '<button class="btn btn-danger" onclick="deleteBorrowDeviceModal(' + device.id + ')">删除</button>';
+                        }
+                        borrowedDeviceList.append(
+                            '<tr>' +
+                                '<td>' + device.name + '</td>' +
+                                '<td>' + device.borrowNumber + '</td>' +
+                                '<td>' + device.borrowDate + '</td>' +
+                                '<td>' + device.returnDate + '</td>' +
+                                '<td>' + actionButton +'</td>' +
+                            '</tr>'
+                        );
+                    });
+                },
+                error: function(error) {
+                    alert('无法加载我的借用设备');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

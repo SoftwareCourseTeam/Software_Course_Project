@@ -1,0 +1,143 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>设备查询</title>
+    <link rel="stylesheet" href="{% static 'plugins/bootstrap-3.4.1/css/bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'plugins/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <style>
+        .navbar {
+            margin-bottom: 0;
+            border: none;
+            border-radius: 0;
+        }
+        .device-table {
+            margin: 20px;
+        }
+        .device-table th, .device-table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .query-form {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-9" aria-expanded="false">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/device_list/">科研设备管理</a>
+          </div>
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-9">
+            <ul class="nav navbar-nav">
+              <li><a href="/device_list/">设备列表</a></li>
+              <li class="active"><a href="device_search.html">设备查询</a></li>
+              <li><a href="/device/scrap/">设备报废管理</a></li>
+              <li><a href="/device/borrow/">设备借出管理</a></li>
+              <li><a href="/message_center/">消息中心</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/logout/">退出</a></li>
+                <li class="dropdown">
+                    <a href="/user/info/" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-user"></i> <!-- 使用 Font Awesome 中的用户小人图标 -->
+                        <span class="caret"></span>
+                    </a>
+                  <ul class="dropdown-menu">
+                    <li><a href="/user/info/">个人信息</a></li>
+                    <li><a href="/user/edit/">修改资料</a></li>
+                  </ul>
+                </li>
+              </ul>
+          </div>
+        </div>
+      </nav>
+    
+    <div class="query-form" style="margin: 10px;">
+        <form id="device-query-form">
+            <div class="form-group" style="width: 200px;margin-left: 10px;">
+                <label for="query-type">查询条件</label>
+                <select class="form-control" id="query-type">
+                    <option value="name">设备名称</option>
+                    <option value="model">设备型号</option>
+                </select>
+            </div>
+            <div class="form-group" style="width: 200px;margin-left: 10px;">
+                <label for="query-input">查询信息</label>
+                <input type="text" class="form-control" id="query-input" placeholder="请输入查询信息">
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-left: 10px;">查询</button>
+        </form>
+    </div>
+
+    <div class="device-table">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>设备名称</th>
+                    <th>设备数量</th>
+                    <th>设备图片</th>
+                    <th>型号规格</th>
+                    <th>购置日期</th>
+                </tr>
+            </thead>
+            <tbody id="device-table-body">
+                <!-- 查询结果将在这里显示 -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'plugins/bootstrap-3.4.1/js/bootstrap.min.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            $('#device-query-form').submit(function(event) {
+                event.preventDefault();
+                var queryType = $('#query-type').val();
+                var queryInput = $('#query-input').val();
+
+                console.log(queryType)
+
+                $.ajax({
+                    url: '/device/search/main/',
+                    method: 'GET',
+                    data: {
+                        'query_type': queryType,
+                        'query_input': queryInput
+                    },
+                    success: function(response) {
+                        var tbody = $('#device-table-body');
+                        tbody.empty();
+
+                        if (response.devices.length > 0) {
+                            response.devices.forEach(function(device) {
+                                var row = '<tr>' +
+                                    '<td>' + device.name + '</td>' +
+                                    '<td>' + device.num + '</td>' +
+                                    '<td><img src="' + device.image + '" alt="设备图片" width="100"></td>' +
+                                    '<td>' + device.model + '</td>' +
+                                    '<td>' + device.purchase_date + '</td>' +
+                                    '</tr>';
+                                tbody.append(row);
+                            });
+                        } else {
+                            tbody.append('<tr><td colspan="5">没有找到匹配的设备</td></tr>');
+                        }
+                    },
+                    error: function() {
+                        alert('查询失败，请稍后再试');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

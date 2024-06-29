@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+    <link rel="stylesheet" href="../static/plugins/bootstrap-3.4.1/css/bootstrap.css">
+    <style>
+        .account{
+            width:500px;
+            height:350px;
+
+            border:1px solid #ddd; /*边框*/
+            border-radius: 20px; /*边框圆角*/
+            box-shadow: 0px 5px 20px #aaa; /*边框阴影*/
+
+            margin-left: auto; /*居中*/
+            margin-right: auto; /*居中*/
+            margin-top: 200px;  /*距上方*/
+            padding: 20px 40px; /*内边距*/
+        }
+        .account h1{
+            text-align: center; /*h1居中*/
+        }
+
+        .navbar {
+            margin-bottom: 0; /* 去除下方边距 */
+            border: none;
+            border-radius: 0;
+        }
+
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+          <!-- Brand and toggle get grouped for better mobile display -->
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-9" aria-expanded="false">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/device_list/">科研设备管理</a>
+          </div>
+  
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-9">
+
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                  <!--跳转到登录界面-->
+                  <a href="login.html" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">未登录 <span class="caret"></span></a>
+                </li>
+              </ul>
+          </div><!-- /.navbar-collapse -->
+      </nav>
+    
+    <div class="account">
+        <h1>用户登录</h1>
+        <form>
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="exampleInputEmail1">用户名</label>
+              <input type="email" class="form-control" id="input_user" placeholder="请输入用户名">
+            </div>
+            <div class="form-group">
+              <label for="exampleInputPassword1">密码</label>
+              <input type="password" class="form-control" id="input_pwd" placeholder="请输入密码">
+            </div>
+            <button type="button" class="btn btn-primary" onclick="user_pwd_empty()">登录</button>
+          </form>
+        <div style="margin-top: 10px;margin-left: 12px;">
+            <a href="/regist/">注册</a><!--这里要修改href为跳转到注册界面-->
+        </div>
+    </div>
+
+    <script src="../static/js/jquery-3.7.1.min.js"></script>
+    <script src="../static/plugins/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        function user_pwd_empty(){
+            var username = $('#input_user').val();
+            var pwd = $('#input_pwd').val();
+            if(username === '' && pwd === ''){
+                alert('用户名和密码不能为空');
+            }else if(username === ''){
+                alert('用户名不能为空');
+            }else if(pwd === ''){
+                alert('密码不能为空');
+            }else{
+                // 前端验证通过，发送 AJAX 请求到后端
+                $.ajax({
+                    url: '/login/deal/', // 替换为你的后端登录 URL
+                    type: 'POST',
+                    data: {
+                        'username': username,
+                        'password': pwd
+                    },
+                    dataType:"JSON",
+                    success: function(response) {
+                        // 根据后端返回的结果处理
+                        if (response.status === 'success') {
+                            alert('登录成功');
+                            window.location.href = '/device_list/'
+                        } else {
+                            alert('用户名或密码错误');
+                        }
+                    },
+                    error: function(error) {
+                        alert('请求失败');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

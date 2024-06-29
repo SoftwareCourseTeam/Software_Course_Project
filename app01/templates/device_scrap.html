@@ -1,0 +1,306 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>设备报废管理</title>
+    <link rel="stylesheet" href="{% static 'plugins/bootstrap-3.4.1/css/bootstrap.css' %}">
+    <link rel="stylesheet" href="{% static 'plugins/font-awesome-4.7.0/css/font-awesome.min.css' %}">
+    <style>
+        .navbar {
+            margin-bottom: 0;
+            border: none;
+            border-radius: 0;
+        }
+        .device-table {
+            margin: 20px;
+        }
+        .device-table th, .device-table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-9" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/device_list/">科研设备管理</a>
+            </div>
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-9">
+                <ul class="nav navbar-nav">
+                    <li><a href="/device_list/">设备列表</a></li>
+                    <li><a href="/device/search/">设备查询</a></li>
+                    <li class="active"><a href="device_scrap.html">设备报废管理</a></li>
+                    <li><a href="/device/borrow/">设备借出管理</a></li>
+                    <li><a href="/message_center/">消息中心</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="/logout/">退出</a></li>
+                    <li class="dropdown">
+                        <a href="/user/info/" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-user"></i> <!-- 使用 Font Awesome 中的用户小人图标 -->
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/user/info/">个人信息</a></li>
+                            <li><a href="/user/edit/">修改资料</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="row" style="margin: 10px;">
+            <div class="col-md-12" style="margin-left: 10px;">
+                <form class="form-inline" id="searchForm">
+                    <div class="form-group">
+                        <label for="searchType">查询类型</label>
+                        <select class="form-control" id="searchType">
+                            <option value="name">设备名称</option>
+                            <option value="model">设备型号</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="searchQuery">查询内容</label>
+                        <input type="text" class="form-control" id="searchQuery" placeholder="输入名称或型号">
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="searchDevices()">查询</button>
+                    <button type="button" class="btn btn-primary" onclick="openMyBorrowedDevicesModal()" style="float:right;margin-right:20px">报废记录</button>
+                </form>
+            </div>
+        </div>
+        <div class="row device-table">
+            <div class="col-md-12">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>设备名称</th>
+                            <th>设备数量</th>
+                            <th>设备图片</th>
+                            <th>型号规格</th>
+                            <th>购置日期</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="device-list">
+                        <!-- 设备信息将通过 JavaScript 动态添加到这里 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片模态框 -->
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="imageModalLabel">设备图片</h4>
+                </div>
+                <div class="modal-body">
+                    <img id="deviceImage" src="" alt="设备图片" style="width: 100%;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 报废设备模态框 -->
+    <div class="modal fade" id="scrapDeviceModal" tabindex="-1" role="dialog" aria-labelledby="scrapDeviceModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-window-close" style="color: red;"></i></button>
+                    <h4 class="modal-title" id="scrapDeviceModalLabel">报废设备</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="scrapDeviceForm">
+                        <div class="form-group">
+                            <label for="scrapDeviceId">设备ID</label>
+                            <input type="text" class="form-control" id="scrapDeviceId" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="scrapDeviceName">设备名称</label>
+                            <input type="text" class="form-control" id="scrapDeviceName" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="scrapDeviceQuantity">报废数量</label>
+                            <input type="number" class="form-control" id="scrapDeviceQuantity" min="1">
+                        </div>
+                        <button type="button" class="btn btn-danger" onclick="submitScrapDevice()">提交报废申请</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 我的报废设备模态框 -->
+    <div class="modal fade" id="myScrappedDevicesModal" tabindex="-1" role="dialog" aria-labelledby="myScrappedDevicesModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-window-close" style="color: red;"></i></button>
+                    <h4 class="modal-title" id="myScrappedDevicesModalLabel">我的报废设备</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>设备名称</th>
+                                <th>报废数量</th>
+                                <th>报废日期</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scrapped-device-list">
+                            <!-- 报废信息将通过 JavaScript 动态添加到这里 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'plugins/bootstrap-3.4.1/js/bootstrap.min.js' %}"></script>
+    
+    <script type="text/javascript">
+        $(document).ready(function() {
+            loadDeviceList();
+            loadMyScrappedDevices();
+        });
+
+        function loadDeviceList() {
+            $.ajax({
+                url: '/device/load/',
+                type: 'GET',
+                data:{'type':'scrap'},
+                success: function(response) {
+                    var devices = response.devices;
+                    var deviceList = $('#device-list');
+                    deviceList.empty();
+                    devices.forEach(function(device) {
+                        deviceList.append(
+                            '<tr>' +
+                                '<td>' + device.name + '</td>' +
+                                '<td>' + device.number + '</td>' +
+                                '<td><button class="btn btn-info" onclick="viewImage(\'' + device.image + '\')">查看图片</button></td>' +
+                                '<td>' + device.model_spec + '</td>' +
+                                '<td>' + device.purchase_date + '</td>' +
+                                '<td><button class="btn btn-danger" onclick="prepareScrapDeviceModal(\'' + device.id + '\', \'' + device.name + '\', ' + device.number + ')">报废</button></td>' +
+                            '</tr>'
+                        );
+                    });
+                },
+                error: function(error) {
+                    alert('无法加载设备列表');
+                }
+            });
+        }
+
+        function viewImage(imageUrl) {
+            $('#deviceImage').attr('src', imageUrl);
+            $('#imageModal').modal('show');
+        }
+
+        function openMyBorrowedDevicesModal() {
+            $('#myScrappedDevicesModal').modal('show');
+        }
+
+        function searchDevices() {
+            var type = $('#searchType').val();
+            var query = $('#searchQuery').val();
+
+            $.ajax({
+                url: '/device/search/main/',
+                    method: 'GET',
+                    data: {
+                        'query_type': type,
+                        'query_input': query
+                    },
+                success: function(response) {
+                    var devices = response.devices;
+                    var deviceList = $('#device-list');
+                    deviceList.empty();
+                    devices.forEach(function(device) {
+                        deviceList.append(
+                            '<tr>' +
+                                '<td>' + device.name + '</td>' +
+                                '<td>' + device.num + '</td>' +
+                                '<td><button class="btn btn-info" onclick="viewImage(\'' + device.image + '\')">查看图片</button></td>' +
+                                '<td>' + device.model + '</td>' +
+                                '<td>' + device.purchase_date + '</td>' +
+                                '<td><button class="btn btn-danger" onclick="prepareScrapDeviceModal(\'' + device.id + '\', \'' + device.name + '\', ' + device.number + ')">报废</button></td>' +
+                            '</tr>'
+                        );
+                    });
+                },
+                error: function(error) {
+                    alert('查询设备失败');
+                }
+            });
+        }
+
+        function prepareScrapDeviceModal(deviceId, deviceName, maxNumber) {
+            $('#scrapDeviceId').val(deviceId);
+            $('#scrapDeviceName').val(deviceName);
+            $('#scrapDeviceQuantity').attr('max', maxNumber);
+            $('#scrapDeviceModal').modal('show');
+        }
+
+        function submitScrapDevice() {
+            var formData = {
+                deviceId: $('#scrapDeviceId').val(),
+                scrapQuantity: $('#scrapDeviceQuantity').val()
+            };
+
+            $.ajax({
+                url: '/device/scrap/submit/',
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    $('#scrapDeviceModal').modal('hide');
+                    alert('报废申请已提交');
+                    loadDeviceList();  // 重新加载设备列表，更新设备数量
+                    loadMyScrappedDevices();
+                },
+                error: function(error) {
+                    alert('提交报废申请失败');
+                }
+            });
+        }
+
+        function loadMyScrappedDevices() {
+            $.ajax({
+                url: '/device/scrap/my/',
+                type: 'GET',
+                success: function(response) {
+                    var scrappedDevices = response.scrappedDevices;
+                    var scrappedDeviceList = $('#scrapped-device-list');
+                    scrappedDeviceList.empty();
+                    scrappedDevices.forEach(function(device) {
+                        scrappedDeviceList.append(
+                            '<tr>' +
+                                '<td>' + device.name + '</td>' +
+                                '<td>' + device.scrapQuantity + '</td>' +
+                                '<td>' + device.scrapDate + '</td>' +
+                            '</tr>'
+                        );
+                    });
+                },
+                error: function(error) {
+                    alert('无法加载我的报废设备');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
